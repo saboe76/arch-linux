@@ -42,8 +42,8 @@ My boot entries:
 1. Kernel + initrd
 2. Kernel + initrd-fallback
 3. Systemd-boot
-    3.1. Systemd-boot kernel + initrd
-    3.2. Systemd-boot kernel + initrd-fallback
+    1. Systemd-boot kernel + initrd
+    2. Systemd-boot kernel + initrd-fallback
 
 
 ## Systemd-boot / bootctl
@@ -63,6 +63,27 @@ By `bootctl install` systemd will copy its bootloader from `/usr/lib/systemd/boo
 
 The relevant files in the ESP:
 
+```tree
+├── EFI
+│   ├── BOOT
+│   │   └── BOOTX64.EFI
+│   └── systemd
+│       └── systemd-bootx64.efi
+├── initramfs-linux-fallback.img
+├── initramfs-linux.img
+├── loader
+│   ├── entries
+│   │   ├── arch-fallback.conf
+│   │   └── arch.conf
+│   ├── entries.srel
+│   ├── loader.conf
+│   └── random-seed
+└── vmlinuz-linux
+```
+
+**DO NOT USE TABS** in any of the systemd-boot configuration files, white space only!
+
+The configuration file for systemd-boot `/loader/loader.conf`:
 
 ```conf
 default        arch.conf
@@ -71,7 +92,8 @@ console-mode   keep
 editor         yes
 ```
 
-The `default` value points to the conf file under `loader/entries` which is used on default.
+The `default` value points to the conf file under `loader/entries` which is used on default
+after a timeout of 4 seconds. The resolution from the firmware is kept and you can edit the entries before booting them.
 
 The format of an entry file is as follows:
 
@@ -86,7 +108,7 @@ Finally, you should find an auto detected entrie in your firmware.
 
 ## Scripts
 
-efibootmgr script to update kernel parameter for example:
+A helpy script to update firmware boot entries.
 
 ```bash
 #!/usr/bin/env bash
