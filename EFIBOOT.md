@@ -1,28 +1,26 @@
 
 # Boot from EFI by systemd-boot or direct
 
-Since systemd brings a small but tiny efi boot loader wecan use it 
-or take advantage of recent kernels that can be directly excutel from
-the EFI firmware.
+Systemd brings a small efi boot loader with support for menu entries.
+Recent kernels can be directly executed by the EFI firmware.
 
 ## Direct / EFIstub / efibootmgr
 
 [Arch / EFI boot stub](https://wiki.archlinux.org/title/EFI_boot_stub)
 
-The program `efibootmgr` can modify your EFI firmware boot entries.
-Thus it is possible to add an entry, to boot you kernel with a command line directly.
-The command line must contail to root filesystem and the location of the initrd.
+The program `efibootmgr` can modify the EFI firmware boot entries.
+Thus it is possible to add an entry, to boot your kernel with a command line directly.
 
 Create an entry for /dev/sda1 (ESP):
 ```
 efibootmgr --create \
-		--disk /dev/sda \
-		--part 1 \
-		--label "Arch Linux" \
-		--loader /vmlinuz-linux \
-		--unicode 'root=UUID=aaaa-cccc rw initrd=\initramfs-linux.img'
+	--disk /dev/sda \
+	--part 1 \
+	--label "Arch" \
+	--loader /vmlinuz-linux \
+	--unicode 'root=UUID=aaaa-cccc rw initrd=\initramfs-linux.img quiet loglevel=3 mitigations=off'
 ```
-The file referencing is relativ to the ESP root.
+The referencing of files starts relativ to the ESP root.
 
 By efibootmgr you can
 
@@ -33,12 +31,92 @@ By efibootmgr you can
 * set next boot entrie (to test once)
 * amm...
 
-Personally, I prefer to have two entries for for regular and fall back image by efistub
-and the same by systemd-boot. If something deletes the entries in the firmware -
-an BIOS/FIRMWARE update e.g. - than you have no change to create that entries in the firmware.
+Personally, I prefer to have two entries for the regular and fall back image by efistub
+and the same by systemd-boot.
+If something goes wrong in the firmware you have no chance to re-create that entries in the firmware.
 
-But what you can: Select a file on the ESP to execute, the boot loader. And that is the systemd
-boot loader at `/EFI/systemd/systemd-bootx64.efi`
+To switch to the systemd-boot loader, just select `/EFI/systemd/systemd-bootx64.efi` from your EFI partition.
+
+My boot entries:
+
+1. Kernel + initrd
+2. Kernel + initrd-fallback
+3. Systemd-boot
+    3.1. Systemd-boot kernel + initrd
+    3.2. Systemd-boot kernel + initrd-fallback
+
 
 ## Systemd-boot / bootctl
 
+[Arch / systemd-boot](https://wiki.archlinux.org/title/Systemd-boot)
+
+Pretty straight forward.
+
+### Install
+
+By `bootctl install` systemd will copy its bootloader from `/usr/lib/systemd/boot/efi/systemd-bootx64.efi` to:
+
+* `/EFI/systemd/systemd-bootx64.efi`
+* `/EFI/BOOT/BOOTX64.EFI`
+
+### Configure
+
+The relevant files in the ESP:
+
+
+```conf
+default        arch.conf
+timeout        4
+console-mode   keep
+editor         yes
+```
+
+The `default` value points to the conf file under `loader/entries` which is used on default.
+
+The format of an entry file is as follows:
+
+```conf
+title         Arch
+linux         /vmlinuz-linux
+initrd        /initramfs-linux.img
+options       root=UUID="a7a16fef-9432-4902-8257-f11fb70f8826" rw amd_pstate=active quiet loglevel=3 mitigations=off nmi_watchdog=0
+```
+
+Finally, you should find an auto detected entrie in your firmware.
+
+## Scripts
+
+efibootmgr script to update kernel parameter for example:
+
+```bash
+#!/usr/bin/env bash
+#
+
+# delete entries 0, 1
+efibootmgr	--quiet --bootnum 0 --delete-bootnum
+efibootmgr	--quiet --bootnum 1 --delete-bootnum
+
+# create new entries 0, 1
+efibootmgr	--quiet \
+		--unicode \
+		--create \
+		--bootnum 0000 \
+		--disk /dev/nvme0n1 \
+		--part 1 \
+		--label "Arch" \
+		--loader "/vmlinuz-linux" \
+		'root=UUID="a7a16fef-9432-4902-8257-f11fb70f8826" rw initrd=\initramfs-linux.img quiet loglevel=3 mitigations=off nmi_watchdog=0'
+
+efibootmgr	--quiet \
+		--unicode \
+		--create \
+		--bootnum 0001 \
+		--disk /dev/nvme0n1 \
+		--part 1 \
+		--label "Arch Fallback" \
+		--loader "/vmlinuz-linux" \
+		'root=UUID="a7a16fef-9432-4902-8257-f11fb70f8826" rw initrd=\initramfs-linux-fallback.img'
+
+# show result
+efibootmgr --unicode
+```
