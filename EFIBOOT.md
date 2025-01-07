@@ -135,11 +135,17 @@ A helpy script to update firmware boot entries with `efibootmgr`:
 #!/usr/bin/env bash
 #
 
+DISK=""
+PART=""
+
 # delete entries 0, 1
 efibootmgr	--quiet --bootnum 0000 --delete-bootnum
 efibootmgr	--quiet --bootnum 0001 --delete-bootnum
+efibootmgr	--quiet --bootnum 0003 --delete-bootnum
 
-# create new entries 0, 1
+# create new entries 0, 1, 3
+#
+# efi stub linux
 efibootmgr	--quiet \
 		--unicode \
 		--create \
@@ -150,6 +156,7 @@ efibootmgr	--quiet \
 		--loader "/vmlinuz-linux" \
 		'root=UUID="a7a16fef-9432-4902-8257-f11fb70f8826" rw initrd=\initramfs-linux.img quiet loglevel=3 mitigations=off nmi_watchdog=0'
 
+# efistub linux fallback
 efibootmgr	--quiet \
 		--unicode \
 		--create \
@@ -160,6 +167,34 @@ efibootmgr	--quiet \
 		--loader "/vmlinuz-linux" \
 		'root=UUID="a7a16fef-9432-4902-8257-f11fb70f8826" rw initrd=\initramfs-linux-fallback.img'
 
+# systemd-boot
+efibootmgr	--quiet \
+		--unicode \
+		--create \
+		--bootnum 0003 \
+		--disk /dev/nvme0n1 \
+		--part 1 \
+		--label "Arch Fallback" \
+		--loader "/EFI/BOOT/BOOTX64.EFI"
+
 # show result
 efibootmgr --unicode
 ```
+
+Results in the following:
+
+```
+# efibootmgr -u
+BootCurrent: 0000
+Timeout: 1 seconds
+BootOrder: 0000,0001,0003,0004,0005,0006
+Boot0000* Arch Linux		HD(1,GPT,85bf918f-a5a4-3445-a7ef-1969a98fbc6c,0x800,0x200000)/\vmlinuz-linuxroot=UUID="c2f6e04e-3abf-4c6a-9902-c6fdda423a30" rw initrd=\initramfs-linux.img quiet loglevel=3 mitigations=off nmi_watchdog=0
+Boot0001* Arch Linux Fallback	HD(1,GPT,85bf918f-a5a4-3445-a7ef-1969a98fbc6c,0x800,0x200000)/\vmlinuz-linuxroot=UUID="c2f6e04e-3abf-4c6a-9902-c6fdda423a30" rw initrd=\initramfs-linux-fallback.img
+Boot0003* UEFI OS		HD(1,GPT,85bf918f-a5a4-3445-a7ef-1969a98fbc6c,0x800,0x200000)/\EFI\BOOT\BOOTX64.EFI
+Boot0004* UEFI:CD/DVD Drive	BBS(129,,0x0)
+Boot0005* UEFI:Removable Device	BBS(130,,0x0)
+Boot0006* UEFI:Network Device	BBS(131,,0x0)
+```
+
+
+
