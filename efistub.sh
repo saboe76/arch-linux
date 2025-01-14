@@ -4,6 +4,10 @@
 DISK="/dev/mmcblk0"
 PART="1"
 ROOT_UUID="c2f6e04e-3abf-4c6a-9902-c6fdda423a30"
+OPTIONS_MNT="root=UUID=$ROOT_UUID rw"
+OPTIONS_INITRD="initrd=\\initramfs-linux.img"
+OPTIONS_INITRD_FALLBACK="initrd=\\initramfs-linux-fallback.img"
+OPTIONS_KRNL="quiet loglevel=3 mitigations=off"
 
 # delete entries 0,1,2
 efibootmgr	--quiet --bootnum 0000 --delete-bootnum
@@ -20,7 +24,7 @@ efibootmgr	--quiet \
 		--part $PART \
 		--label "Arch RG" \
 		--loader /vmlinuz-linux \
-		--unicode 'root=UUID="'$ROOT_UUID'" rw initrd=\initramfs-linux.img quiet loglevel=3 mitigations=off nmi_watchdog=0'
+		--unicode "$OPTIONS_MNT $OPTIONS_INITRD $OPTIONS_KRNL"
 
 # efistub arch fallback
 efibootmgr	--quiet \
@@ -31,7 +35,7 @@ efibootmgr	--quiet \
 		--part $PART \
 		--label "Arch FB" \
 		--loader /vmlinuz-linux \
-		--unicode 'root=UUID="'$ROOT_UUID'" rw initrd=\initramfs-linux-fallback.img'
+		--unicode "$OPTIONS_MNT $OPTIONS_INITRD_FALLBACK"
 
 # systemd-boot
 efibootmgr	--quiet \
@@ -40,7 +44,7 @@ efibootmgr	--quiet \
 		--create \
 		--disk $DISK \
 		--part $PART \
-		--label "systemd" \
+		--label "Linux Boot Manager" \
 		--loader "/EFI/systemd/systemd-bootx64.efi"
 
 # efi default loader
@@ -50,7 +54,7 @@ efibootmgr	--quiet \
 		--create \
 		--disk $DISK \
 		--part $PART \
-		--label "UEFI Loader" \
+		--label "UEFI:Default" \
 		--loader "/EFI/BOOT/BOOTX64.EFI"
 
 # boot order
