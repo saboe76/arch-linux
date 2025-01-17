@@ -146,6 +146,57 @@ Boot0005* UEFI:Removable Device	BBS(130,,0x0)
 Boot0006* UEFI:Network Device	BBS(131,,0x0)
 ```
 
+## UKI Unified Kernel Image
+
+[Arch / Unified kernel image](https://wiki.archlinux.org/title/Unified_kernel_image)
+
+*A unified kernel image (UKI) is a single executable which can be booted
+directly from UEFI firmware, or automatically sourced by boot loaders
+with little or no configuration. It is the combination of a UEFI boot
+stub program like systemd-stub(7), a Linux kernel image, an initrd, and
+further resources in a single UEFI PE file.*
+
+These kernel file can be build, by enabling them in `/etc/mkinitcpio.d/linux.preset`.
+Here an example of mine:
+
+```
+# mkinitcpio preset file for the 'linux' package
+
+#ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+
+PRESETS=('default' 'fallback')
+
+#default_config="/etc/mkinitcpio.conf"
+default_image="/boot/initramfs-linux.img"
+default_uki="/boot/EFI/Linux/arch-linux.efi"
+#default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+
+#fallback_config="/etc/mkinitcpio.conf"
+fallback_image="/boot/initramfs-linux-fallback.img"
+fallback_uki="/boot/EFI/Linux/arch-linux-fallback.efi"
+fallback_options="-S autodetect"
+```
+
+The `{default,fallback}_uki` pathes - when uncommented - will get an
+UKI kernel that is directly bootable by the UEFI firmware.
+
+The kernel command line for any build of UKI images is
+taken from `/etc(kernel/cmdline`. Here we defile every single optine
+line by line like:
+
+```
+root=UUID=a7a16fef-9432-4902-8257-f11fb70f8826
+rw
+quiet
+loglevel=0
+mitigations=off
+nowatchdog
+acpi.ec_no_wakeup=1
+amd_pstate=active
+```
+
+Just another example.
 
 
 
