@@ -49,7 +49,7 @@ the efibootmgr, hence:
 
 
 ```
-pacstrap -K /mnt base linux linux-firmware mc efibootmgr
+pacstrap -K /mnt base linux linux-firmware mc openssh efibootmgr
 ```
 
 Now we need to have have a valid fstab for booting:
@@ -102,7 +102,7 @@ echo KEYMAP=de-latin1 > /etc/vconsole.conf
 
 #### mkinitcpio
 
-anable the uki generation
+enable the uki generation and change the path from `/efi/...` to `/boot/...`
 
 ```
 mcedit /etc/mkinitcpio.d/linux.preset
@@ -141,6 +141,12 @@ enable systemd-resolve service
 systemctl enable systemd-resolved
 ```
 
+config and enable ssh service
+```
+sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g'
+systemctl enable sshd
+```
+
 #### Boot
 
 since we have the UKI build enabled, we need to have the kernel command line setup
@@ -152,20 +158,41 @@ findmnt / -o UUID -n
 
 edit
 ```
-mkdir /etc/kernel && mcedit /etc/kernel/cmdline
+mkdir /etc/kernel; mcedit /etc/kernel/cmdline
 ```
 
 and fill in like
 ```
-root=UUID=c2f6e04e-3abf-4c6a-9902-c6fdda423a30
+root=UUID=
 rw
 quiet
 loglevel=3
 mitigations=off
 ```
 
+make sure the path for the UKI kernel is up
+```
+mkdir -p /boot/EFI/Linux
+```
+
+and build the both kernel+initrds
+```
+mkinitcpio -P
+```
+
 ##### EFI Boot entry
 
-Either you can setup an entry (file) from your firmware or use
-`efibootmgr` to create an entry.
+Either you can setup an entry (boot file) from your firmware - not always possible -
+or use create these entries by `efibootmgr`.
 
+##### efibootmgr UKI
+
+TBD
+
+##### efibootmgr efistub
+
+TBD
+
+##### efibootmgr systemd-boot
+
+TBD
