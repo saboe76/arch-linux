@@ -13,10 +13,10 @@ and do the following by ssh and copy and paste.
 use cfdisk `cfdisk /dev/vda` and init the disk for GPT.
 
 | type | size |
-| :--- | :--- |
+| :--- | ---: |
 | EFI  | 1G   |
 | SWAP | 2G   |
-| EXT4 | XG   |
+| EXT4 | xG   |
 
 or whatever other layout you prefer.
 
