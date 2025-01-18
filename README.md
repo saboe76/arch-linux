@@ -7,6 +7,9 @@ this is an install script / guide to c'n'p most things and not to forget somethi
 setup your system and get the arch linux live system up.
 from that point, I prefer to set a root password, get the ip address
 and do the following by ssh and copy and paste.
+```
+ssh -o StrictHostKeychecking=no -o PreferredAuthentications=password root@192.168.0.86
+```
 
 ### Disk Partitions
 
