@@ -123,7 +123,7 @@ systemctl enable systemd-resolved
 
 config and enable ssh service
 ```
-sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g' /etc/ssh/sshd_config
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 systemctl enable sshd
 ```
 
@@ -192,7 +192,7 @@ mkfs.vfat -F 32 ${DISK}1
 mkswap ${DISK}2
 mkfs.ext4 ${DISK}3
 
-#mount
+# mount
 mount ${DISK}3 /mnt
 mkdir /mnt/boot
 mount ${DISK}1 /mnt/boot
@@ -245,6 +245,7 @@ mcedit /etc/mkinitcpio.d/linux.preset
 mkinitcpio -P
 
 # bootloader
-efibootmgr -u -b 0000 -d /dev/vda -p 1 -L "Arch UKI" -l "/EFI/Linux/arch-linux.efi"
+efibootmgr -u -b 0000 -d /dev/vda -p 1 -L "Arch UKI"    -l "/EFI/Linux/arch-linux.efi"
+efibootmgr -u -b 0001 -d /dev/vda -p 1 -L "Arch UKI FB" -l "/EFI/Linux/arch-linux-fallback.efi"
 
 ```
