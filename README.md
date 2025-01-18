@@ -182,29 +182,39 @@ TBD
 
 before chroot
 ```
+export DISK=/dev/vda
+
 # part
-cfdisk /dev/vda
+cfdisk ${DISK}
 
 # format
-mkfs.vfat -F 32 /dev/vda1
-mkswap /dev/vda2
-mkfs.ext4 /dev/vda3
+mkfs.vfat -F 32 ${DISK}1
+mkswap ${DISK}2
+mkfs.ext4 ${DISK}3
 
 #mount
-mount /dev/vda3 /mnt
+mount ${DISK}3 /mnt
 mkdir /mnt/boot
-mount /dev/vda1 /mnt/boot
-swapon /dev/vda2
+mount ${DISK}1 /mnt/boot
+swapon ${DISK}2
 
 # install
-pacstrap -cK /mnt base linux linux-firmware mc openssh efibootmgr
+pacstrap -K /mnt base linux linux-firmware mc openssh efibootmgr
 genfstab -U /mnt >> /mnt/etc/fstab
+
+```
+
+chroot
+```
 arch-chroot /mnt
 
 ```
 
 after chrooted
 ```
+# passwd
+echo a | passwd
+
 # time
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
@@ -219,8 +229,9 @@ echo LANG=en_US.UTF-8 > /etc/locale.conf
 echo KEYMAP=de-latin1 > /etc/vconsole.conf
 
 # network
-echo -e "[Match]\nName=enp1s0\n\n[Network]\nDHCP=yes" > /etc/systemd/network/enp1s0.network
-mcedit /etc/systemd/network/enp1s0.network
+export IPIF=$(ip -4 route show default | awk '{print $5}')
+echo -e "[Match]\nName=$IPIF\n\n[Network]\nDHCP=yes" > /etc/systemd/network/$IPIF.network
+mcedit /etc/systemd/network/$IPIF.network
 
 # network services
 systemctl enable systemd-networkd
@@ -239,6 +250,6 @@ echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=o
 mkinitcpio -P
 
 # bootloader
-efibootmgr -u -c -b 000X -d /dev/vda -p 1 -L "Arach UKI" -l "/EFI/Linux/arch-linux.efi"
+efibootmgr -u -c -b 0000 -d /dev/vda -p 1 -L "Arch UKI" -l "/EFI/Linux/arch-linux.efi"
 
 ```
