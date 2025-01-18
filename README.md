@@ -1,65 +1,55 @@
 # arch-linux
 
-some notes around arch and linux in general
-
-one line more
+this is an install script / guide to c'n'p most things and not to forget something.
 
 ## Installation
 
-Setup your system and get the arch linux live system up. From that
-point, I prefer to set a root password, get the IP address and do the
-following by ssh and copy and paste.
+setup your system and get the arch linux live system up.
+from that point, I prefer to set a root password, get the ip address
+and do the following by ssh and copy and paste.
 
 ### Disk Partitions
 
-Use cfdisk and init the disk for GPT.
+use cfdisk `cfdisk /dev/vda` and init the disk for GPT.
 
-* Choose your EFI partition, I'm used to make it 1G.
-* Choose your swap, I'm used to no more than 4G.
-  If you need more swap than 4G, you have a serious problem and should fix that :-)
-* Choose you root partition.
-* Decide if you want to use a separate for `/home`.
+| type | size |
+| :--- | :--- |
+| EFI  | 1G   |
+| SWAP | 2G   |
+| EXT4 | XG   |
+
+or whatever other layout you prefer.
 
 ### Format
 
-EFI:
-```
-mkfs.vfat -F 32 /dev/foo1
-```
-
-SWAP:
-```
-mkswap /dev/foo2
-```
-
-EXT4:
-```
-mkfs.ext4 /dev/foo3
-```
+| type | command                     |
+| :--- | :-------------------------- |
+| EFI  | `mkfs.vfat -F 32 /dev/vda1` |
+| SWAP | `mkswap /dev/vda2`          |
+| EXT4 | `mkfs.ext4 /dev/foo3`       |
 
 ### Mount
 
-Now mount the root fs under /mnt and create the dirs for the other mountpoints, like `/mnt/boot` or `/mnt/home` and
-mount the other file systems to these points. Swapon the swap partition, so everything is mount.
-
-Pacstrap will / install fill the `/mnt` with a running system. I usually prefer to have Midnight Commander and
-the efibootmgr, hence:
+now mount the root fs under `/mnt`
+and create the dirs for the other mountpoints,
+like `/mnt/boot` or `/mnt/home`
+so you can mount the other file systems to these points.
+swapon the swap partition, so everything is mount.
 
 ### Install
 
-
+Pacstrap will install / fill the `/mnt` with a runable system.
+I usually prefer to have Midnight Commander, OpenSSH and efibootmgr
 ```
 pacstrap -K /mnt base linux linux-firmware mc openssh efibootmgr
 ```
 
-Now we need to have have a valid fstab for booting:
-
+append mountpoints in `/mnt` to have a valid fstab
 ```
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-And we can beam into our new root file system
-
+and beam into our new root file system
 ```
 arch-chroot /mnt
 ```
@@ -67,7 +57,7 @@ arch-chroot /mnt
 
 ### Setup
 
-#### Password !!!
+#### !!! ROOT !!! Password !!!
 
 ```
 passwd
@@ -86,7 +76,7 @@ time sync service
 systemctl enable systemd-timesyncd
 ```
 
-#### Locale
+#### Locales
 
 ```
 sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
@@ -100,25 +90,11 @@ echo LANG=en_US.UTF-8 > /etc/locale.conf
 echo KEYMAP=de-latin1 > /etc/vconsole.conf
 ```
 
-#### mkinitcpio
-
-enable the uki generation and change the path from `/efi/...` to `/boot/...`
-```
-mcedit /etc/mkinitcpio.d/linux.preset
-```
-
-and create the path
-```
-mkdir -p /boot/EFI/Linux
-```
-
-we build the initrds later
-
 #### Network
 
 find interface name
 ```
-ip l
+ip link show
 ```
 
 edit interface config
@@ -153,10 +129,17 @@ systemctl enable sshd
 
 #### Boot
 
-since we have the UKI build enabled, we need to have the kernel command
-line setup.
+enable the uki generation and change the path from `/efi/...` to `/boot/...`
+```
+mcedit /etc/mkinitcpio.d/linux.preset
+```
 
-copy the rootfs uuid from
+create the path for
+```
+mkdir -p /boot/EFI/Linux
+```
+
+get the rootfs uuid
 ```
 findmnt / -o UUID -n
 ```
@@ -166,16 +149,7 @@ edit
 mkdir /etc/kernel; mcedit /etc/kernel/cmdline
 ```
 
-and fill in like
-```
-root=UUID=
-rw
-quiet
-loglevel=3
-mitigations=off
-```
-
-or oneline
+and fillup like
 ```
 echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=off" > /etc/kernel/cmdline
 ```
@@ -185,13 +159,12 @@ rebuild the initrds and the UKI kernels
 mkinitcpio -P
 ```
 
-dont reoot, check if boot load is neccessary and when, install and
-configure.
+dont reboot! first, check if a bootloader is required at your platform.
+if you can create boot entries from your firmware, you good to reboot.
 
-##### EFI Boot entry
+else have to create them with efibootmgr.
 
-Either you can setup an entry (boot file) from your firmware - not always possible -
-or use create these entries by `efibootmgr` or use systemd-boot
+##### EFI Boot
 
 ##### efibootmgr UKI
 
@@ -204,3 +177,4 @@ TBD
 ##### efibootmgr systemd-boot
 
 TBD
+
