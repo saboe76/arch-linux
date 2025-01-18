@@ -24,9 +24,9 @@ or whatever other layout you prefer.
 
 | type | command                     |
 | :--- | :-------------------------- |
-| EFI  | `mkfs.vfat -F 32 /dev/vda1` |
-| SWAP | `mkswap /dev/vda2`          |
-| EXT4 | `mkfs.ext4 /dev/foo3`       |
+| EFI  | "mkfs.vfat -F 32 /dev/vda1" |
+| SWAP | "mkswap /dev/vda2"          |
+| EXT4 | "mkfs.ext4 /dev/vda3"       |
 
 ### Mount
 
