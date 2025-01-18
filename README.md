@@ -60,7 +60,7 @@ arch-chroot /mnt
 #### !!! ROOT !!! Password !!!
 
 ```
-passwd
+echo a | passwd -s
 ```
 
 #### Time / Zone / Sync
@@ -213,43 +213,38 @@ arch-chroot /mnt
 after chrooted
 ```
 # passwd
-echo a | passwd
+echo a | passwd -s
 
 # time
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
 systemctl enable systemd-timesyncd
 
-# l18n
-sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+# l18n and keyb
+echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+echo "LANG=en_US.UTF-8"   > /etc/locale.conf
+echo "KEYMAP=de-latin1"   > /etc/vconsole.conf
 locale-gen
-echo LANG=en_US.UTF-8 > /etc/locale.conf
-
-# keyboard
-echo KEYMAP=de-latin1 > /etc/vconsole.conf
 
 # network
-export IPIF=$(ip -4 route show default | awk '{print $5}')
-echo -e "[Match]\nName=$IPIF\n\n[Network]\nDHCP=yes" > /etc/systemd/network/$IPIF.network
-mcedit /etc/systemd/network/$IPIF.network
+echo -e "[Match]\nName=en*\nName=eth*\n\n[Network]\nDHCP=yes" > /etc/systemd/network/ethernet.network
 
 # network services
 systemctl enable systemd-networkd
-enable systemd-resolve service
 systemctl enable systemd-resolved
 
 # network services ssh
-sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g' /etc/ssh/sshd_config
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 systemctl enable sshd
 
 # mkinitcpio
-mcedit /etc/mkinitcpio.d/linux.preset
 mkdir -p /boot/EFI/Linux
 mkdir -p /etc/kernel
 echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=off" > /etc/kernel/cmdline
+mcedit /etc/mkinitcpio.d/linux.preset
 mkinitcpio -P
 
 # bootloader
-efibootmgr -u -c -b 0000 -d /dev/vda -p 1 -L "Arch UKI" -l "/EFI/Linux/arch-linux.efi"
+efibootmgr -u -b 0000 -d /dev/vda -p 1 -L "Arch UKI" -l "/EFI/Linux/arch-linux.efi"
 
 ```
