@@ -12,11 +12,11 @@ and do the following by ssh and copy and paste.
 
 use cfdisk `cfdisk /dev/vda` and init the disk for GPT.
 
-| type | size |
-| :--- | ---: |
-| EFI  | 1G   |
-| SWAP | 2G   |
-| EXT4 | xG   |
+| type |   size |
+| :--- | -----: |
+| EFI  | `1G`   |
+| SWAP | `2G`   |
+| EXT4 | `xG`   |
 
 or whatever other layout you prefer.
 
@@ -24,9 +24,9 @@ or whatever other layout you prefer.
 
 | type | command                     |
 | :--- | :-------------------------- |
-| EFI  | "mkfs.vfat -F 32 /dev/vda1" |
-| SWAP | "mkswap /dev/vda2"          |
-| EXT4 | "mkfs.ext4 /dev/vda3"       |
+| EFI  | `mkfs.vfat -F 32 /dev/vda1` |
+| SWAP | `mkswap /dev/vda2`          |
+| EXT4 | `mkfs.ext4 /dev/vda3`       |
 
 ### Mount
 
@@ -34,22 +34,22 @@ now mount the root fs under `/mnt`
 and create the dirs for the other mountpoints,
 like `/mnt/boot` or `/mnt/home`
 so you can mount the other file systems to these points.
-swapon the swap partition, so everything is mount.
+swapon the swap partition, so everything is mounted.
 
 ### Install
 
-Pacstrap will install / fill the `/mnt` with a runable system.
-I usually prefer to have Midnight Commander, OpenSSH and efibootmgr
+`pacstrap` will install to the `/mnt` with a fresh system.
+I usually prefer to have Midnight Commander, OpenSSH and efibootmgr along base and linux
 ```
 pacstrap -K /mnt base linux linux-firmware mc openssh efibootmgr
 ```
 
-append mountpoints in `/mnt` to have a valid fstab
+append mountpoints in `/mnt` without `/mnt` to fstab
 ```
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-and beam into our new root file system
+and call Scotty to beam us into our new root file system
 ```
 arch-chroot /mnt
 ```
@@ -178,3 +178,67 @@ TBD
 
 TBD
 
+### All in One
+
+before chroot
+```
+# part
+cfdisk /dev/vda
+
+# format
+mkfs.vfat -F 32 /dev/vda1
+mkswap /dev/vda2
+mkfs.ext4 /dev/vda3
+
+#mount
+mount /dev/vda3 /mnt
+mkdir /mnt/boot
+mount /dev/vda1 /mnt/boot
+swapon /dev/vda2
+
+# install
+pacstrap -cK /mnt base linux linux-firmware mc openssh efibootmgr
+genfstab -U /mnt >> /mnt/etc/fstab
+arch-chroot /mnt
+
+```
+
+after chrooted
+```
+# time
+ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
+hwclock --systohc
+systemctl enable systemd-timesyncd
+
+# l18n
+sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+locale-gen
+echo LANG=en_US.UTF-8 > /etc/locale.conf
+
+# keyboard
+echo KEYMAP=de-latin1 > /etc/vconsole.conf
+
+# network
+echo -e "[Match]\nName=enp1s0\n\n[Network]\nDHCP=yes" > /etc/systemd/network/enp1s0.network
+mcedit /etc/systemd/network/enp1s0.network
+
+# network services
+systemctl enable systemd-networkd
+enable systemd-resolve service
+systemctl enable systemd-resolved
+
+# network services ssh
+sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g' /etc/ssh/sshd_config
+systemctl enable sshd
+
+# mkinitcpio
+mcedit /etc/mkinitcpio.d/linux.preset
+mkdir -p /boot/EFI/Linux
+mkdir -p /etc/kernel
+echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=off" > /etc/kernel/cmdline
+mkinitcpio -P
+
+# bootloader
+efibootmgr -u -c -b 000X -d /dev/vda -p 1 -L "Arach UKI" -l "/EFI/Linux/arch-linux.efi"
+
+```
