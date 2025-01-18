@@ -103,9 +103,13 @@ echo KEYMAP=de-latin1 > /etc/vconsole.conf
 #### mkinitcpio
 
 enable the uki generation and change the path from `/efi/...` to `/boot/...`
-
 ```
 mcedit /etc/mkinitcpio.d/linux.preset
+```
+
+and create the path
+```
+mkdir -p /boot/EFI/Linux
 ```
 
 we build the initrds later
@@ -143,13 +147,14 @@ systemctl enable systemd-resolved
 
 config and enable ssh service
 ```
-sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g'
+sed -i 's/^.*PermitRootLogin.*$/PermitRootLogin yes/g' /etc/ssh/sshd_config
 systemctl enable sshd
 ```
 
 #### Boot
 
-since we have the UKI build enabled, we need to have the kernel command line setup
+since we have the UKI build enabled, we need to have the kernel command
+line setup.
 
 copy the rootfs uuid from
 ```
@@ -170,20 +175,23 @@ loglevel=3
 mitigations=off
 ```
 
-make sure the path for the UKI kernel is up
+or oneline
 ```
-mkdir -p /boot/EFI/Linux
+echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=off" > /etc/kernel/cmdline
 ```
 
-and build the both kernel+initrds
+rebuild the initrds and the UKI kernels
 ```
 mkinitcpio -P
 ```
 
+dont reoot, check if boot load is neccessary and when, install and
+configure.
+
 ##### EFI Boot entry
 
 Either you can setup an entry (boot file) from your firmware - not always possible -
-or use create these entries by `efibootmgr`.
+or use create these entries by `efibootmgr` or use systemd-boot
 
 ##### efibootmgr UKI
 
