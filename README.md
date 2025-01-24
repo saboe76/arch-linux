@@ -52,7 +52,7 @@ append mountpoints in `/mnt` without `/mnt` to fstab
 genfstab -U /mnt >> /mnt/etc/fstab
 ```
 
-and call Scotty to beam us into our new root file system
+call Scotty to beam us into our new root file system
 ```
 arch-chroot /mnt
 ```
@@ -82,9 +82,11 @@ systemctl enable systemd-timesyncd
 #### Locales
 
 ```
-sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+echo "en_US.UTF-8 UTF-8"    >> /etc/locale.gen
 locale-gen
-echo LANG=en_US.UTF-8 > /etc/locale.conf
+echo "LANG="C.UTF-8"        >  /etc/locale.conf
+echo "LC_TIME="de_DE.UTF-8" >> /etc/locale.conf
+echo "TIME_STYLE=iso8"      >> /etc/locale.conf
 ```
 
 #### Keyboard
@@ -102,13 +104,14 @@ ip link show
 
 edit interface config
 ```
-mcedit /etc/systemd/network/enp1s0.network
+mcedit /etc/systemd/network/ethernet.network
 ```
 
 like
 ```
 [Match]
-Name=enp1s0
+Name=en*
+Name=eth*
 
 [Network]
 DHCP=yes
@@ -122,6 +125,7 @@ systemctl enable systemd-networkd
 enable systemd-resolve service
 ```
 systemctl enable systemd-resolved
+ls -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 ```
 
 config and enable ssh service
@@ -149,7 +153,7 @@ findmnt / -o UUID -n
 
 edit
 ```
-mkdir /etc/kernel; mcedit /etc/kernel/cmdline
+mkdir -p /etc/kernel; mcedit /etc/kernel/cmdline
 ```
 
 and fillup like
@@ -215,7 +219,7 @@ arch-chroot /mnt
 
 after chrooted
 ```
-# passwd
+# root passwd
 echo a | passwd -s
 
 # time
@@ -224,9 +228,11 @@ hwclock --systohc
 systemctl enable systemd-timesyncd
 
 # l18n and keyb
-echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-echo "LANG=en_US.UTF-8"   > /etc/locale.conf
-echo "KEYMAP=de-latin1"   > /etc/vconsole.conf
+echo "en_US.UTF-8 UTF-8"    >> /etc/locale.gen
+echo "KEYMAP=de-latin1"     >  /etc/vconsole.conf
+echo "LANG="C.UTF-8"        >  /etc/locale.conf
+echo "LC_TIME="de_DE.UTF-8" >> /etc/locale.conf
+echo "TIME_STYLE=iso8"      >> /etc/locale.conf
 locale-gen
 
 # network
@@ -248,7 +254,9 @@ mcedit /etc/mkinitcpio.d/linux.preset
 mkinitcpio -P
 
 # bootloader
-efibootmgr -u -b 0000 -d /dev/vda -p 1 -L "Arch UKI"    -l "/EFI/Linux/arch-linux.efi"
-efibootmgr -u -b 0001 -d /dev/vda -p 1 -L "Arch UKI FB" -l "/EFI/Linux/arch-linux-fallback.efi"
+efibootmgr -u -b 0 -B
+efibootmgr -u -b 0 -c -d /dev/vda -p 1 -L "Arch UKI"    -l "/EFI/Linux/arch-linux.efi"
+efibootmgr -u -b 1 -B
+efibootmgr -u -b 1 -c -d /dev/vda -p 1 -L "Arch UKI FB" -l "/EFI/Linux/arch-linux-fallback.efi"
 
 ```
