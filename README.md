@@ -171,19 +171,10 @@ if you can create boot entries from your firmware, you good to reboot.
 
 else have to create them with efibootmgr.
 
-##### EFI Boot
-
-##### efibootmgr UKI
-
-TBD
-
-##### efibootmgr efistub
-
-TBD
-
-##### efibootmgr systemd-boot
-
-TBD
+install systemd-boot to auto-detect the UKI images
+```
+bootctl install
+```
 
 ### All in One
 
@@ -254,7 +245,10 @@ echo -e "root=UUID=$(findmnt / -o UUID -n)\nrw\nquiet\nloglevel=3\nmitigations=o
 mcedit /etc/mkinitcpio.d/linux.preset
 mkinitcpio -P
 
-# bootloader
+# bootloader systemd-boot
+bootctl install
+
+# bootloader direct entries
 efibootmgr -u -b 0 -B
 efibootmgr -u -b 0 -c -d /dev/vda -p 1 -L "Arch UKI"    -l "/EFI/Linux/arch-linux.efi"
 efibootmgr -u -b 1 -B
