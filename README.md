@@ -169,9 +169,7 @@ mkinitcpio -P
 dont reboot! first, check if a bootloader is required at your platform.
 if you can create boot entries from your firmware, you good to reboot.
 
-else have to create them with efibootmgr.
-
-install systemd-boot to auto-detect the UKI images
+else have to create them with efibootmgr or install systemd-boot which will auto-detect the UKI images in `/EFI/Linux`
 ```
 bootctl install
 ```
