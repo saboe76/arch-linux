@@ -76,7 +76,7 @@ hwclock --systohc
 
 time sync service
 ```
-systemctl enable --now systemd-timesyncd
+systemctl enable systemd-timesyncd
 ```
 
 #### Locales
@@ -119,19 +119,19 @@ DHCP=yes
 
 enable systemd-network service
 ```
-systemctl enable --now systemd-networkd
+systemctl enable systemd-networkd
 ```
 
 enable systemd-resolve service
 ```
-systemctl enable --now systemd-resolved
+systemctl enable systemd-resolved
 ls -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 ```
 
 config and enable ssh service
 ```
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-systemctl enable --now sshd
+systemctl enable sshd
 ```
 
 #### Boot
@@ -216,7 +216,7 @@ echo a | passwd -s
 # time
 ln -sf /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 hwclock --systohc
-systemctl enable --now systemd-timesyncd
+systemctl enable systemd-timesyncd
 
 # l18n and keyb
 echo "en_US.UTF-8 UTF-8"    >> /etc/locale.gen
@@ -230,13 +230,13 @@ locale-gen
 echo -e "[Match]\nName=en*\nName=eth*\n\n[Network]\nDHCP=yes" > /etc/systemd/network/ethernet.network
 
 # network services
-systemctl enable --now systemd-networkd
-systemctl enable --now systemd-resolved
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
 ls -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 # network services ssh
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
-systemctl enable --now sshd
+systemctl enable sshd
 
 # mkinitcpio
 mkdir -p /boot/EFI/Linux
