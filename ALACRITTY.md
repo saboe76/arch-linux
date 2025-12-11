@@ -1,10 +1,5 @@
 
 ```toml
-#[general]
-#import = [
-#    "~/.config/alacritty/themes/themes/alabaster.toml"
-#]
-
 [colors]
 draw_bold_text_with_bright_colors = true
 
@@ -38,7 +33,7 @@ foreground = "#bbbbbb"
 TERM = "xterm-256color"
 
 [font]
-size = 19.0
+size = 15.0
 
 [font.bold]
 family = "Iosevka Fixed"
@@ -61,7 +56,7 @@ action = "Togglefullscreen"
 key = "F11"
 
 [[mouse.bindings]]
-action = "PasteSelection"
+action = "Paste"
 mouse = "Right"
 
 [selection]
@@ -87,7 +82,8 @@ y = 6
 [hints]
 enabled = []
 
-#[bell]
-#animation = "EaseOutQuad"
-#duration = 50
+[cursor]
+style = { shape = "Beam", blinking = "On"}
+thickness = 0.25
+unfocused_hollow = false
 ```
