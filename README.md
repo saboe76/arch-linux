@@ -230,7 +230,7 @@ echo -e "[Match]\nName=en*\nName=eth*\n\n[Network]\nDHCP=yes" > /etc/systemd/net
 # network services
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
-ls -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+ln -sf /var/run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 # network services ssh
 echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
