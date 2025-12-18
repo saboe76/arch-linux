@@ -8,6 +8,7 @@ Add keys of archzfs repo
 curl -O https://archzfs.com/archzfs.gpg
 pacman-key -a archzfs.gpg
 pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
+
 ```
 
 Add repo to pacman
@@ -47,4 +48,14 @@ Install packages from archzfs
 
 ```
 pacman -S linux-lts linux-lts-headers zfs-utils archzfs-dkms
+```
+
+Set service to import pool and mount
+
+```
+systemctl enable zfs.target
+systemctl enable zfs-import.target
+systemctl enable zfs-import-cache.service
+systemctl enable zfs-mount.service
+zpool set cachefile=/etc/zfs/zpool.cache pool
 ```
